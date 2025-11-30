@@ -1,0 +1,82 @@
+# ============================================
+# DYLUMO - Git Ignore
+# ============================================
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+
+# Data (download via Kaggle notebook)
+data/
+
+# Model checkpoints (download from Kaggle after training)
+checkpoints/*.pt
+checkpoints/*.pth
+checkpoints/*.pkl
+checkpoints/*.npy
+checkpoints/*.parquet
+
+# FAISS indexes
+*.faiss
+*.index
+
+# Environment variables
+.env
+
+# Kaggle credentials (NEVER commit!)
+.kaggle/
+**/kaggle.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Large model files
+*.bin
+*.safetensors
+
+# HuggingFace cache
+.cache/

@@ -1,0 +1,16 @@
+{
+  "id": "adeelmahmoodansari/dylumo-image-to-music-training",
+  "title": "DYLUMO Image to Music Training",
+  "code_file": "train_notebook.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "dataset_sources": [
+    "amitanshjoshi/spotify-1million-tracks"
+  ],
+  "competition_sources": [],
+  "kernel_sources": []
+}
+
