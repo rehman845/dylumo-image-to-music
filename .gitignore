@@ -22,8 +22,8 @@ data/processed/
 *.wav
 *.flac
 
-# Models
-models/
+# Models (trained model files, not source code)
+/models/
 *.pth
 *.pt
 *.ckpt
