@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Data (don't commit large datasets)
+data/raw/
+data/processed/
+*.h5
+*.hdf5
+*.mp3
+*.wav
+*.flac
+
+# Models
+models/
+*.pth
+*.pt
+*.ckpt
+*.pkl
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Experiments
+experiments/results/
+*.log
+
+# Paper (compiled)
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.bbl
+paper/*.blg
+

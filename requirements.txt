@@ -1,0 +1,45 @@
+# Core dependencies
+torch>=2.0.0
+torchvision>=0.15.0
+transformers>=4.30.0
+pillow>=9.5.0
+numpy>=1.24.0
+pandas>=2.0.0
+
+# Computer Vision & CLIP
+clip-by-openai>=1.0
+opencv-python>=4.7.0
+
+# Audio processing
+librosa>=0.10.0
+soundfile>=0.12.0
+
+# Music APIs
+spotipy>=2.23.0
+
+# LLM & LangChain
+langchain>=0.0.200
+openai>=1.0.0
+
+# Web framework (for API)
+fastapi>=0.100.0
+uvicorn>=0.23.0
+
+# Data visualization
+matplotlib>=3.7.0
+seaborn>=0.12.0
+plotly>=5.14.0
+
+# Similarity search (FAISS)
+faiss-cpu>=1.7.4
+# For GPU support, use: faiss-gpu>=1.7.4 (instead of faiss-cpu)
+
+# Utilities
+python-dotenv>=1.0.0
+tqdm>=4.65.0
+scikit-learn>=1.3.0
+
+# Jupyter
+jupyter>=1.0.0
+ipykernel>=6.25.0
+
