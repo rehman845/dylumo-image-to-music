@@ -40,8 +40,10 @@ env/
 # Jupyter Notebooks
 .ipynb_checkpoints/
 
-# Data (download via Kaggle notebook)
+# Data (download via Kaggle notebook or scripts/download_data.py)
 data/
+data.zip
+*.zip
 
 # Model checkpoints (download from Kaggle after training)
 checkpoints/*.pt

@@ -43,7 +43,7 @@ A deep learning system that recommends music based on the emotional content of i
 
 ```
 dylumo-image-to-music/
-├── kaggle/                  # Kaggle training (MAIN)
+├── kaggle/                  # Kaggle training
 │   ├── setup_kaggle.py      # Setup Kaggle API credentials
 │   ├── train_notebook.ipynb # Training notebook (run on Kaggle GPU)
 │   └── kernel-metadata.json # Kaggle API config
@@ -51,8 +51,7 @@ dylumo-image-to-music/
 │   ├── model.py             # FastMLP architecture
 │   ├── extractor.py         # CLIP feature extractor
 │   └── recommender.py       # FAISS-based recommender
-├── training/                # Local training scripts (optional)
-├── inference/               # Inference scripts
+├── inference/               # Inference scripts (run locally after training)
 ├── checkpoints/             # Trained models (download from Kaggle)
 ├── data/                    # Data directory (gitignored)
 ├── frontend/                # Web frontend (coming soon)
