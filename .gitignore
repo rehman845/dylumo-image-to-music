@@ -82,3 +82,25 @@ temp/
 
 # HuggingFace cache
 .cache/
+
+# Output folder (trained models - too large for git)
+output/
+
+# List files (per project requirements)
+*.lst
+
+# Image files (too many/large)
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
+
+# Parquet data files
+*.parquet
+
+# CSV data files (raw data)
+*.csv
+
+# NumPy arrays
+*.npy

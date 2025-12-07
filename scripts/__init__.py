@@ -1,2 +1,0 @@
-# DYLUMO Scripts
-

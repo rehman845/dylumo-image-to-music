@@ -1,319 +1,185 @@
-# DYLUMO - Image to Music Recommendation
+# DyLuMo - Image to Music Recommendation System
 
-**D**eep **Y**earning **L**earning for **U**nified **M**usic and **O**ptics
+A cross-modal AI system that recommends music based on image emotions using deep learning.
 
-A deep learning system that recommends music based on the emotional content of images. Upload an image, get song recommendations that match its mood!
+## Overview
 
-## Architecture Overview
+DyLuMo uses a cross-modal transformer architecture combining CLIP vision encoder with custom transformer layers to predict music characteristics from images. The system analyzes image emotions and recommends matching songs from a curated database.
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                      TRAINING PHASE (Kaggle GPU)                 │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  Images (.jpg/png)  ──►  CLIP ViT-B/32  ──►  Image Features     │
-│                                              (512-dim)           │
-│                                                   │              │
-│                                                   ▼              │
-│                                           ┌─────────────┐        │
-│  Spotify Dataset    ──►  Normalize +      │  FastMLP    │        │
-│  (1M+ songs)            Extract 13        │  Model      │        │
-│                         Audio Features    │ 512→256→128 │        │
-│                         (13-dim)          │    →13      │        │
-│                              ▲            └─────────────┘        │
-│                              │                   │               │
-│                              └───────────────────┘               │
-│                           (matched by emotion)                   │
-└─────────────────────────────────────────────────────────────────┘
+## Architecture
 
-┌─────────────────────────────────────────────────────────────────┐
-│                    INFERENCE PHASE                               │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  Input Image  ──►  CLIP  ──►  FastMLP  ──►  FAISS Search        │
-│                    (512-dim)   (13-dim)     (1M+ songs)          │
-│                                                   │              │
-│                                                   ▼              │
-│                                        Top-K Recommended Songs   │
-│                                           (with metadata)        │
-└─────────────────────────────────────────────────────────────────┘
-```
+- **Vision Encoder:** CLIP (ViT-Base-Patch32)
+- **Cross-Modal Transformer:** 4-layer transformer with 8 attention heads
+- **Audio Feature Prediction:** 13 Spotify audio features
+- **Emotion Classification:** 7 emotion categories
+- **Similarity Search:** FAISS index with 5,782 songs
+- **Total Parameters:** 96.5M (9.1M trainable)
+
+## Features
+
+- Image-based music recommendation
+- Emotion detection from images
+- Fast inference (2 seconds per image)
+- Professional dark-themed web interface
+- REST API for integration
 
 ## Project Structure
 
 ```
 dylumo-image-to-music/
-├── kaggle/                  # Kaggle training
-│   ├── setup_kaggle.py      # Setup Kaggle API credentials
-│   ├── train_notebook.ipynb # Training notebook (run on Kaggle GPU)
-│   └── kernel-metadata.json # Kaggle API config
-├── ml/                      # Core ML modules
-│   ├── model.py             # FastMLP architecture
-│   ├── extractor.py         # CLIP feature extractor
-│   └── recommender.py       # FAISS-based recommender
-├── inference/               # Inference scripts (run locally after training)
-├── checkpoints/             # Trained models (download from Kaggle)
-├── data/                    # Data directory (gitignored)
-├── frontend/                # Web frontend (coming soon)
-├── backend/                 # API backend (coming soon)
-└── docs/                    # Documentation & proposals
+├── app/                        # Web application (Flask backend + frontend)
+│   ├── app.py                  # Flask server
+│   ├── inference.py            # Model inference
+│   ├── config.py               # Configuration
+│   ├── templates/              # HTML templates
+│   └── static/                 # JavaScript, CSS
+│
+├── kaggle/                     # Training notebook
+│   └── gen-ai-project-kaggle-merged.ipynb
+│
+├── output/                     # Trained model artifacts (not in git)
+│   └── kaggle/working/
+│       ├── checkpoints/        # Model weights
+│       └── data/               # FAISS index, metadata
+│
+├── docs/                       # Project documentation
+├── test_inference.py           # Test script
+└── README.md
 ```
 
 ## Quick Start
 
 ### Prerequisites
 
-- Python 3.10+ 
-- Git
-- Kaggle account (free)
+- Python 3.8+
+- 4GB RAM minimum
+- GPU recommended (optional)
 
-### 1. Clone the Repository
+### Installation
 
 ```bash
-git clone https://github.com/rehman845/dylumo-image-to-music.git
+# Clone repository
+git clone <your-repo-url>
 cd dylumo-image-to-music
-```
 
-### 2. Create Virtual Environment
-
-**Windows (PowerShell):**
-```powershell
+# Create virtual environment
 python -m venv venv
-.\venv\Scripts\Activate.ps1
-```
+source venv/bin/activate  # Windows: .\venv\Scripts\Activate.ps1
 
-**Linux/Mac:**
-```bash
-python -m venv venv
-source venv/bin/activate
-```
-
-### 3. Install Dependencies
-
-```bash
+# Install dependencies
+cd app
 pip install -r requirements.txt
 ```
 
-### 4. Setup Kaggle API
+### Download Model Artifacts
+
+The trained model and FAISS index are not included in git (too large).
+
+**Download from:**
+- [Kaggle Output] or [Google Drive] (link after training)
+- Extract to `output/kaggle/working/`
+
+**Required files:**
+```
+output/kaggle/working/
+├── checkpoints/dylumo_optimized.pt     (368 MB)
+├── data/music_index.index              (300 KB)
+├── data/spotify_metadata.parquet       (400 KB)
+├── data/spotify_scaler.pkl             (2 KB)
+├── data/deployment_config.json         (2 KB)
+└── data/model_architecture.py          (5 KB)
+```
+
+### Run Application
 
 ```bash
-python kaggle/setup_kaggle.py --setup
+# Start Flask server
+cd app
+python app.py
+
+# Open browser
+# Navigate to: http://localhost:5000
 ```
 
-This will ask for your Kaggle credentials. Get them from:
-https://www.kaggle.com/settings → API → Create New API Token
+## Usage
 
----
+1. **Upload Image:** Click or drag-and-drop an image
+2. **Analyze:** Click "Analyze & Recommend"
+3. **View Results:** See detected emotion and top 10 song recommendations
 
-## Training on Kaggle (Free GPU) 🚀
+## Training
 
-### Option 1: Upload Notebook Manually (Recommended)
+To retrain the model:
 
-1. Go to https://www.kaggle.com/code
-2. Click **"New Notebook"**
-3. **File → Import Notebook** → Upload `kaggle/train_notebook.ipynb`
-4. Click **"Add Data"** (right sidebar) → Search **"spotify-1million-tracks"** → Add
-5. **Settings** → **Accelerator** → Select **"GPU T4 x2"**
-6. Click **"Run All"** and wait (~20-30 mins)
+1. **Open Kaggle notebook:** `kaggle/gen-ai-project-kaggle-merged.ipynb`
+2. **Upload to Kaggle** with GPU enabled
+3. **Attach datasets:**
+   - `spotify-1million-tracks`
+   - `rclone` (for Google Drive sync)
+4. **Run all cells** (approximately 3 hours on Tesla T4)
+5. **Download artifacts** from `/kaggle/working/`
 
-### Option 2: Push via Kaggle API
+**Training configuration:**
+- Dataset: 25,000 songs, 32,214 images
+- Epochs: 30 (20 warmup + 10 fine-tuning)
+- Batch size: 128
+- Optimizer: AdamW with weight decay
+- Regularization: Dropout (0.3), label smoothing (0.2)
 
-```bash
-python kaggle/setup_kaggle.py --push
-```
+## Model Performance
 
-### After Training Completes:
+- **Validation Accuracy:** 24-25% (7-class emotion)
+- **Test Accuracy:** 25%
+- **Feature MSE:** 0.12
+- **Baseline (Random):** 14.3%
+- **Improvement:** 1.7x over random
 
-Download these files from Kaggle **Output** tab:
-- `dylumo_model.pt`
-- `spotify_scaler.pkl` 
-- `spotify_features.npy`
-- `spotify_metadata.parquet`
+**Note:** Accuracy reflects exact emotion match. The system uses predicted audio features for recommendations, which perform better than emotion accuracy alone.
 
-Place them in your local folders:
-```
-checkpoints/
-├── dylumo_model.pt
-└── spotify_scaler.pkl
+## API Documentation
 
-data/processed/
-├── spotify_features.npy
-└── spotify_metadata.parquet
-```
+### Endpoints
 
----
+**GET /health**
+- Check server status and model loading state
 
-## Inference (After Training)
+**POST /recommend**
+- Upload image and get song recommendations
+- Request: `multipart/form-data` with `image` field
+- Response: JSON with emotion prediction and recommendations
 
-### 5. Build FAISS Index
+**GET /emotions**
+- List all supported emotions
 
-```bash
-python inference/build_index.py
-```
+**GET /stats**
+- Get system statistics
 
-### 6. Get Recommendations
+## Technologies
 
-```bash
-python inference/recommend.py --image path/to/your/image.jpg --top_k 10
-```
+- **Backend:** Flask, PyTorch, Transformers, FAISS
+- **Frontend:** HTML, CSS, JavaScript
+- **ML:** CLIP, Custom Transformer, Multi-task Learning
+- **Data:** EMID (images), Spotify (music)
 
----
+## Authors
 
-## Datasets
-
-### Spotify 1M Tracks
-- **Source:** [Kaggle](https://www.kaggle.com/datasets/amitanshjoshi/spotify-1million-tracks)
-- **Size:** 1.16M tracks
-- **Features:** 13 audio features (danceability, energy, valence, tempo, etc.)
-- **Note:** Added automatically when you add it to Kaggle notebook
-
-### EMID Dataset
-- **Source:** [HuggingFace](https://huggingface.co/datasets/ecnu-aigc/EMID)
-- **Paper:** [EMID: An Emotional Aligned Dataset](https://arxiv.org/abs/2308.07622)
-- **Size:** 10,738 music-image pairs, 3,240 unique images
-- **Emotions:** anger, amusement, fear, sadness, excitement, awe, contentment
-- **Note:** Downloaded automatically in the notebook
-
----
-
-## Model Architecture
-
-**FastMLP** - Maps image features to music features:
-
-```
-Input (512-dim CLIP features)
-    │
-    ▼
-Linear(512, 512) + BatchNorm + ReLU + Dropout(0.2)
-    │
-    ▼
-Linear(512, 256) + BatchNorm + ReLU + Dropout(0.2)
-    │
-    ▼
-Linear(256, 128) + BatchNorm + ReLU + Dropout(0.2)
-    │
-    ▼
-Linear(128, 13)
-    │
-    ▼
-Output (13-dim audio features)
-```
-
-**Parameters:** ~430,000
-
----
-
-## Audio Features (13 dimensions)
-
-| Feature | Description | Range |
-|---------|-------------|-------|
-| danceability | How suitable for dancing | 0-1 |
-| energy | Perceptual intensity | 0-1 |
-| key | Musical key | 0-11 (normalized) |
-| loudness | Overall loudness (dB) | normalized |
-| mode | Major (1) or minor (0) | 0-1 |
-| speechiness | Presence of spoken words | 0-1 |
-| acousticness | Acoustic confidence | 0-1 |
-| instrumentalness | No vocals prediction | 0-1 |
-| liveness | Audience presence | 0-1 |
-| valence | Musical positiveness | 0-1 |
-| tempo | BPM | normalized |
-| duration_ms | Track length | normalized |
-| time_signature | Beats per bar | normalized |
-
----
-
-## Emotion Mapping
-
-Images and songs are matched by emotion categories:
-
-| Valence | Energy | Emotion |
-|---------|--------|---------|
-| High | High | excitement |
-| High | Medium | amusement |
-| High | Low | contentment |
-| Low | High | anger |
-| Low | Medium | fear |
-| Low | Low | sadness |
-
----
-
-## For Team Members
-
-### Complete Setup (Run in Order)
-
-```bash
-# ============================================
-# STEP 1: Clone & Setup Environment
-# ============================================
-git clone https://github.com/rehman845/dylumo-image-to-music.git
-cd dylumo-image-to-music
-
-# Windows
-python -m venv venv
-.\venv\Scripts\Activate.ps1
-
-# Linux/Mac (use this instead)
-# python -m venv venv
-# source venv/bin/activate
-
-pip install -r requirements.txt
-
-# ============================================
-# STEP 2: Setup Kaggle API
-# ============================================
-python kaggle/setup_kaggle.py --setup
-# Enter your Kaggle username and API key when prompted
-# Get credentials from: https://www.kaggle.com/settings → API
-
-# ============================================
-# STEP 3: Train on Kaggle (Manual - Recommended)
-# ============================================
-# 1. Go to https://www.kaggle.com/code
-# 2. Click "New Notebook"
-# 3. File → Import Notebook → Upload kaggle/train_notebook.ipynb
-# 4. Add Data → Search "spotify-1million-tracks" → Add
-# 5. Settings → Accelerator → GPU T4 x2
-# 6. Run All (wait ~20-30 mins)
-# 7. Download output files when complete
-
-# ============================================
-# STEP 4: Download Kaggle Outputs
-# ============================================
-# Create folders if they don't exist
-mkdir -p checkpoints data/processed
-
-# Download from Kaggle Output tab and place:
-# - dylumo_model.pt → checkpoints/
-# - spotify_scaler.pkl → checkpoints/
-# - spotify_features.npy → data/processed/
-# - spotify_metadata.parquet → data/processed/
-
-# ============================================
-# STEP 5: Build FAISS Index
-# ============================================
-python inference/build_index.py
-
-# ============================================
-# STEP 6: Test Recommendations
-# ============================================
-python inference/recommend.py --image path/to/image.jpg --top_k 10
-```
-
----
-
-## Team
-
-- Adeel Mahmood Ansari (22i-0979)
-- Awab (22i-1068)
-- Talha Azim (22i-1243)
+- 22i-1068
+- 22i-0979
+- 22i-1243
 
 ## License
 
-This project is for educational purposes (Generative AI Course - Fall 2025).
+Academic Project - Fall 2025
 
 ## Acknowledgments
 
-- [EMID Dataset](https://arxiv.org/abs/2308.07622) - ECNU AIGC Lab
-- [Spotify 1M Tracks](https://www.kaggle.com/datasets/amitanshjoshi/spotify-1million-tracks) - Amitansh Joshi
-- [OpenAI CLIP](https://github.com/openai/CLIP)
+- EMID Dataset (ecnu-aigc)
+- Spotify Million Tracks Dataset
+- OpenAI CLIP Model
+- Hugging Face Transformers
+
+## References
+
+- Russell's Circumplex Model of Affect
+- CLIP: Learning Transferable Visual Models From Natural Language Supervision
+- Cross-Modal Learning for Audio-Visual Recognition

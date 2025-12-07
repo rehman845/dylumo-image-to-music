@@ -1,0 +1,12 @@
+# Flask Backend Requirements
+flask>=3.0.0
+flask-cors>=4.0.0
+torch>=2.0.0
+torchvision>=0.15.0
+transformers>=4.35.0
+faiss-cpu>=1.7.4
+pillow>=10.0.0
+pandas>=2.0.0
+pyarrow>=14.0.0
+werkzeug>=3.0.0
+
