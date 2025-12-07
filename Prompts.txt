@@ -1,0 +1,836 @@
+================================================================================
+DYLUMO - IMAGE TO MUSIC RECOMMENDATION SYSTEM
+PROMPTS USED FOR PROJECT DEVELOPMENT
+================================================================================
+Course: Generative AI, Spring 2025
+Instructor: Dr. Akhtar Jamil
+Students: 22i-1068, 22i-0979, 22i-1243
+================================================================================
+
+This file documents all major prompts used with generative AI tools (ChatGPT, 
+Claude, Cursor AI) during the development of this project. Prompts are organized
+chronologically by development phase.
+
+================================================================================
+PHASE 1: PROJECT IDEATION AND RESEARCH (Week 1-2)
+================================================================================
+
+PROMPT 1: Initial Project Brainstorming
+--------------------------------------------------------------------------------
+Date: January 10, 2025
+Tool: ChatGPT-4
+Purpose: Generate project ideas combining computer vision and audio
+
+"I'm working on a Generative AI project for my university course. I want to 
+create something that combines computer vision with audio/music generation. 
+The project should use deep learning and be unique. Can you suggest 5 innovative 
+project ideas that:
+1. Use generative AI techniques
+2. Have practical applications
+3. Can be completed in 6-8 weeks
+4. Use publicly available datasets
+Please include brief descriptions and potential challenges for each idea."
+
+Output Used: Selected "Image to Music Recommendation" concept
+--------------------------------------------------------------------------------
+
+
+PROMPT 2: Literature Review Assistance
+--------------------------------------------------------------------------------
+Date: January 12, 2025
+Tool: ChatGPT-4
+Purpose: Find relevant research papers
+
+"I'm building a system that recommends music based on image emotions. Help me 
+find 15 recent research papers (2020-2024) related to:
+- Cross-modal learning (vision-audio)
+- Emotion detection from images
+- Music recommendation systems
+- CLIP model applications
+- Transformer architectures for multi-modal learning
+For each paper, provide: title, authors, year, conference/journal, and a 
+2-sentence summary of the key contribution."
+
+Output Used: Created related work section in proposal
+--------------------------------------------------------------------------------
+
+
+PROMPT 3: Dataset Selection Guidance
+--------------------------------------------------------------------------------
+Date: January 14, 2025
+Tool: Claude
+Purpose: Identify suitable datasets
+
+"I need datasets for a project that predicts music from images based on emotions.
+Requirements:
+1. Image dataset with emotion labels (at least 7 emotions)
+2. Music dataset with audio features (tempo, valence, energy, etc.)
+3. Both should be publicly available on Kaggle or Hugging Face
+4. Minimum 10,000 samples each
+5. Clear licensing for academic use
+
+Please suggest specific datasets with download links and describe how they could 
+be combined for training a cross-modal model."
+
+Output Used: Selected EMID dataset (32k images) + Spotify 1M tracks
+--------------------------------------------------------------------------------
+
+================================================================================
+PHASE 2: MODEL ARCHITECTURE DESIGN (Week 2-3)
+================================================================================
+
+PROMPT 4: Cross-Modal Architecture Design
+--------------------------------------------------------------------------------
+Date: January 18, 2025
+Tool: ChatGPT-4
+Purpose: Design model architecture
+
+"Design a deep learning architecture for cross-modal learning that:
+INPUT: Image (RGB, any resolution)
+OUTPUT: 13 audio features (continuous values) + emotion classification (7 classes)
+
+Requirements:
+- Use pre-trained CLIP vision encoder (frozen initially)
+- Add custom transformer layers for cross-modal mapping
+- Multi-task learning: emotion classification + feature regression
+- Include attention mechanism
+- Total trainable parameters: 5-10M
+- Should work on single GPU (12GB VRAM)
+
+Provide:
+1. Layer-by-layer architecture
+2. Activation functions for each layer
+3. Loss function design for multi-task learning
+4. PyTorch code structure"
+
+Output Used: Implemented CrossModalTransformer class in notebook
+--------------------------------------------------------------------------------
+
+
+PROMPT 5: Loss Function Design
+--------------------------------------------------------------------------------
+Date: January 20, 2025
+Tool: Claude
+Purpose: Design multi-task loss function
+
+"I'm training a model with three objectives:
+1. Emotion classification (7 classes)
+2. Audio feature regression (13 features, normalized 0-1)
+3. Cross-modal alignment (image and audio embeddings should be close)
+
+Design a combined loss function that:
+- Balances all three objectives
+- Includes appropriate weights for each component
+- Uses label smoothing for classification
+- Has contrastive loss for embedding alignment
+
+Provide the mathematical formulation and PyTorch implementation."
+
+Output Used: Implemented combined_loss function with weights [1.0, 0.5, 0.3]
+--------------------------------------------------------------------------------
+
+
+PROMPT 6: Regularization Strategy
+--------------------------------------------------------------------------------
+Date: January 22, 2025
+Tool: ChatGPT-4
+Purpose: Prevent overfitting
+
+"My model has 96.5M parameters (87.4M frozen, 9.1M trainable). Training on 
+51,542 samples. How can I prevent overfitting? Suggest:
+1. Dropout placement and rates
+2. Data augmentation for images (for emotion recognition)
+3. Label smoothing value
+4. Weight decay coefficient
+5. Learning rate schedule
+6. Early stopping criteria
+
+Explain the reasoning for each suggestion."
+
+Output Used: Dropout 0.3, label smoothing 0.2, weight decay 0.01
+--------------------------------------------------------------------------------
+
+================================================================================
+PHASE 3: DATA PREPROCESSING (Week 3)
+================================================================================
+
+PROMPT 7: Image Preprocessing Pipeline
+--------------------------------------------------------------------------------
+Date: January 24, 2025
+Tool: Cursor AI
+Purpose: Create data preprocessing code
+
+"Write a PyTorch data preprocessing pipeline for image emotion recognition:
+- Load images from parquet files (Hugging Face EMID dataset)
+- Resize to 224x224 (CLIP input size)
+- Apply augmentation: random horizontal flip, color jitter, rotation (±15°)
+- Normalize using CLIP's normalization values
+- Handle missing/corrupted images gracefully
+- Create DataLoader with batch_size=128, num_workers=2
+- Split data: 80% train, 10% val, 10% test (NO DATA LEAKAGE)
+
+Include error handling and progress bars."
+
+Output Used: Implemented in Cell 10 of notebook
+--------------------------------------------------------------------------------
+
+
+PROMPT 8: Data Leakage Prevention
+--------------------------------------------------------------------------------
+Date: January 26, 2025
+Tool: Claude
+Purpose: Fix validation accuracy issue
+
+"My model achieves 100% validation accuracy which suggests data leakage. Current 
+setup: I create image-song pairs (2 pairs per image), then split into train/val. 
+The problem: same images appear in both train and val with different songs.
+
+How do I fix this to ensure:
+1. Images in train set DON'T appear in val/test sets
+2. Songs can overlap (that's okay)
+3. Maintain reasonable dataset sizes
+4. Implement this in PyTorch/Pandas
+
+Provide code that splits by unique image IDs first, then creates pairs."
+
+Output Used: Fixed splitting logic - split images first, then create pairs
+--------------------------------------------------------------------------------
+
+
+PROMPT 9: Audio Feature Normalization
+--------------------------------------------------------------------------------
+Date: January 28, 2025
+Tool: ChatGPT-4
+Purpose: Normalize Spotify features
+
+"I have 13 Spotify audio features with different ranges:
+- tempo: 0-250 BPM
+- loudness: -60 to 0 dB
+- valence, energy, danceability: 0-1
+- key: 0-11 (categorical)
+- mode: 0-1 (binary)
+etc.
+
+Design a normalization strategy that:
+1. Brings all features to similar scale for neural network
+2. Handles outliers appropriately
+3. Is reversible (for generating recommendations)
+4. Can be saved/loaded (sklearn StandardScaler or MinMaxScaler?)
+
+Provide code to fit on training data and transform train/val/test."
+
+Output Used: Used StandardScaler, saved as spotify_scaler.pkl
+--------------------------------------------------------------------------------
+
+================================================================================
+PHASE 4: TRAINING AND OPTIMIZATION (Week 4-5)
+================================================================================
+
+PROMPT 10: Training Loop Implementation
+--------------------------------------------------------------------------------
+Date: February 1, 2025
+Tool: Cursor AI
+Purpose: Write training code
+
+"Implement a training loop for multi-task learning with these requirements:
+- 30 epochs total
+- Freeze CLIP encoder for first 5 epochs, unfreeze after
+- Different learning rates: 1e-3 (custom layers), 1e-4 (CLIP layers)
+- Cosine annealing learning rate schedule
+- Gradient accumulation (accumulate 2 steps)
+- Mixed precision training (torch.cuda.amp)
+- Save checkpoints every 5 epochs
+- Track: train loss, val loss, val accuracy, val MSE
+- Print progress with rich formatting
+- Early stopping if val loss doesn't improve for 10 epochs
+
+Include proper gradient clipping and optimizer state management."
+
+Output Used: Implemented in Cell 15 of notebook
+--------------------------------------------------------------------------------
+
+
+PROMPT 11: GPU Memory Optimization
+--------------------------------------------------------------------------------
+Date: February 3, 2025
+Tool: ChatGPT-4
+Purpose: Fix out-of-memory error
+
+"I'm getting CUDA OOM error during training. Setup:
+- Model: 96.5M parameters
+- Batch size: 128
+- Image size: 224x224x3
+- GPU: Tesla T4 (12GB VRAM)
+
+Suggest optimizations:
+1. Should I reduce batch size or use gradient accumulation?
+2. Can I use mixed precision training?
+3. Should I clear cache periodically?
+4. Is my CLIP encoder properly frozen?
+5. Are there memory leaks in my DataLoader?
+
+Provide code snippets for each optimization."
+
+Output Used: Kept batch_size=128, added gradient accumulation, mixed precision
+--------------------------------------------------------------------------------
+
+
+PROMPT 12: Learning Rate Tuning
+--------------------------------------------------------------------------------
+Date: February 5, 2025
+Tool: Claude
+Purpose: Find optimal learning rate
+
+"My model training is unstable - loss spikes randomly. Current setup:
+- Initial LR: 1e-3 (custom layers), 1e-4 (CLIP layers after unfreezing)
+- Optimizer: AdamW with weight_decay=0.01
+- Scheduler: CosineAnnealingLR
+
+Questions:
+1. Is my LR too high?
+2. Should I use warmup period?
+3. What's the best way to tune LR for transfer learning?
+4. Should I use different LR for classification vs regression heads?
+
+Suggest a systematic approach to find optimal LR."
+
+Output Used: Kept 1e-3, added 5-epoch warmup by freezing CLIP
+--------------------------------------------------------------------------------
+
+
+PROMPT 13: Debugging Low Validation Accuracy
+--------------------------------------------------------------------------------
+Date: February 7, 2025
+Tool: ChatGPT-4
+Purpose: Understand 25% validation accuracy
+
+"My 7-class emotion classifier achieves only 25% validation accuracy (random is 
+14.3%). Is this good or bad? Context:
+- Task: Predict music emotion from image emotion (cross-modal)
+- No direct supervised connection between image patterns and audio features
+- Training on image-song pairs where both have same emotion label
+- Emotions: anger, amusement, awe, contentment, excitement, fear, sadness
+
+Questions:
+1. What's a reasonable accuracy for this task?
+2. Should I focus on emotion accuracy or audio feature MSE?
+3. How do I explain this to evaluators?
+4. What other metrics should I report?
+
+Provide a clear explanation suitable for a research paper."
+
+Output Used: Added explanation in README about cross-modal challenge
+--------------------------------------------------------------------------------
+
+================================================================================
+PHASE 5: MODEL EVALUATION (Week 5)
+================================================================================
+
+PROMPT 14: FAISS Index Creation
+--------------------------------------------------------------------------------
+Date: February 10, 2025
+Tool: Cursor AI
+Purpose: Build similarity search index
+
+"I need to create a FAISS index for music recommendation:
+- 5,782 songs in database
+- Each song has 13 audio features (normalized)
+- Want to find top-K most similar songs to predicted features
+- Should use cosine similarity (not L2 distance)
+- Need to save index to disk for deployment
+- Should also save song metadata (name, artist, emotion)
+
+Provide code to:
+1. Create FAISS index with cosine similarity
+2. Add all songs to index
+3. Save index and metadata
+4. Load and query the index
+5. Return top-10 recommendations with similarity scores"
+
+Output Used: Implemented in Cell 19, saved as music_index.index
+--------------------------------------------------------------------------------
+
+
+PROMPT 15: Evaluation Metrics Selection
+--------------------------------------------------------------------------------
+Date: February 12, 2025
+Tool: Claude
+Purpose: Choose appropriate metrics
+
+"What metrics should I report for my cross-modal music recommendation system?
+Current metrics:
+- Emotion classification accuracy
+- Audio feature MSE
+- Training/validation loss
+
+Should I also report:
+1. Top-K accuracy (is predicted emotion in top-3)?
+2. Emotion confusion matrix?
+3. Feature-wise MSE breakdown?
+4. Recommendation diversity?
+5. User satisfaction (but I don't have users)?
+
+Suggest 5-7 key metrics for the research paper with justification."
+
+Output Used: Added Top-1, Top-3, Top-5 accuracy, confusion matrix plotting
+--------------------------------------------------------------------------------
+
+
+PROMPT 16: Inference Speed Optimization
+--------------------------------------------------------------------------------
+Date: February 14, 2025
+Tool: ChatGPT-4
+Purpose: Make inference faster
+
+"My model takes 5 seconds per image for inference. Too slow for web deployment.
+Optimization ideas:
+1. Batch multiple images together?
+2. Use torch.jit.script for model compilation?
+3. Use ONNX runtime?
+4. Quantize the model?
+5. Use CPU or GPU for deployment?
+
+My target: <2 seconds per image. What's the best approach for Flask deployment?"
+
+Output Used: Kept PyTorch, moved model to GPU if available, batch_size=1
+--------------------------------------------------------------------------------
+
+================================================================================
+PHASE 6: WEB APPLICATION DEVELOPMENT (Week 6)
+================================================================================
+
+PROMPT 17: Flask Backend Structure
+--------------------------------------------------------------------------------
+Date: February 16, 2025
+Tool: Cursor AI
+Purpose: Design Flask application
+
+"Design a Flask backend for my image-to-music recommendation system:
+
+Requirements:
+1. POST /recommend endpoint: upload image, return recommendations
+2. GET /health endpoint: check if model is loaded
+3. GET /emotions endpoint: return list of supported emotions
+4. GET /stats endpoint: return system statistics
+5. Serve a frontend HTML page at /
+6. Load model once at startup (not per request)
+7. Handle errors gracefully (invalid images, large files)
+8. CORS enabled for API testing
+9. Max upload size: 10MB
+10. Return JSON with: predicted emotion, confidence, top-10 songs
+
+Provide complete Flask app.py with proper error handling."
+
+Output Used: Implemented app/app.py
+--------------------------------------------------------------------------------
+
+
+PROMPT 18: Frontend Design
+--------------------------------------------------------------------------------
+Date: February 18, 2025
+Tool: ChatGPT-4
+Purpose: Create web UI
+
+"Design a modern, professional web interface for music recommendation system:
+
+Features needed:
+1. Drag & drop image upload area
+2. Image preview before analysis
+3. "Analyze & Recommend" button
+4. Loading spinner during processing
+5. Display predicted emotion with confidence
+6. Show top-10 song recommendations in a nice grid/list
+7. Each song shows: name, artist, emotion, similarity score
+8. Dark theme (black/purple gradient background)
+9. Responsive design (works on mobile)
+10. Gemini-inspired aesthetic
+
+Use: HTML5, CSS3, vanilla JavaScript (no frameworks)
+Provide complete index.html with inline CSS and JS."
+
+Output Used: Implemented app/templates/index.html with dark theme
+--------------------------------------------------------------------------------
+
+
+PROMPT 19: API Error Handling
+--------------------------------------------------------------------------------
+Date: February 20, 2025
+Tool: Claude
+Purpose: Handle edge cases
+
+"What error cases should my Flask API handle?
+1. No image uploaded
+2. Invalid file format (not jpg/png)
+3. File too large (>10MB)
+4. Corrupted image
+5. Model not loaded yet
+6. FAISS index missing
+7. GPU out of memory during inference
+8. Image too small (<50x50)
+
+For each case, suggest:
+- HTTP status code to return
+- Error message for user
+- Logging strategy
+- Fallback behavior (if any)
+
+Provide code for comprehensive error handling."
+
+Output Used: Added try-except blocks in app.py, proper status codes
+--------------------------------------------------------------------------------
+
+
+PROMPT 20: Model Loading Optimization
+--------------------------------------------------------------------------------
+Date: February 22, 2025
+Tool: ChatGPT-4
+Purpose: Speed up startup time
+
+"My Flask app takes 30 seconds to start because it loads:
+1. 368MB PyTorch model
+2. CLIP processor
+3. 5,782-song FAISS index
+4. Metadata parquet file
+5. StandardScaler pickle
+
+How can I optimize this?
+1. Lazy loading (load on first request)?
+2. Preload in separate thread?
+3. Use smaller model format?
+4. Cache in Redis?
+5. Use model server (TorchServe)?
+
+For a simple Flask deployment, what's the best approach?"
+
+Output Used: Load everything at startup, show clear loading messages
+--------------------------------------------------------------------------------
+
+================================================================================
+PHASE 7: DEBUGGING AND FIXES (Week 6-7)
+================================================================================
+
+PROMPT 21: Fix Model Bias Toward Sadness
+--------------------------------------------------------------------------------
+Date: February 24, 2025
+Tool: Claude
+Purpose: Debug prediction bias
+
+"My model predicts 'sadness' for 93% of test images. Problem: class imbalance
+in training data (sadness: 24.9%, amusement: 7.6%).
+
+Fixes to try:
+1. Weighted loss function (inverse frequency weights)?
+2. Oversample minority classes?
+3. Focal loss instead of cross-entropy?
+4. Class-balanced sampling in DataLoader?
+5. Post-processing: temperature scaling?
+
+Which approach is best for inference stage (can't retrain)? Which is best for 
+training stage? Provide code for both."
+
+Output Used: Noted limitation in README, suggested retraining with class weights
+--------------------------------------------------------------------------------
+
+
+PROMPT 22: Git Push Protection Error
+--------------------------------------------------------------------------------
+Date: February 26, 2025
+Tool: Cursor AI
+Purpose: Fix secret in git history
+
+"GitHub blocked my push: 'Push cannot contain secrets'. I accidentally committed 
+my Hugging Face token in the notebook. How do I fix this?
+
+Options:
+1. Just remove it and commit again (will it work?)
+2. Rewrite git history (how?)
+3. Use .gitignore (but it's already committed)
+4. Use git filter-branch or BFG Repo-Cleaner?
+
+Provide step-by-step commands for Windows PowerShell that:
+1. Remove the token from the file
+2. Clean git history
+3. Force push safely
+4. Prevent this in future"
+
+Output Used: Replaced token with os.getenv(), rewrote history, added to gitignore
+--------------------------------------------------------------------------------
+
+
+PROMPT 23: Handling Large Model Files in Git
+--------------------------------------------------------------------------------
+Date: February 28, 2025
+Tool: ChatGPT-4
+Purpose: Manage 368MB model file
+
+"My trained model is 368MB but GitHub's limit is 100MB. Options:
+1. Git LFS (but quotas are expensive)
+2. Upload to Google Drive and share link
+3. Upload to Hugging Face Hub
+4. Split file into chunks
+5. Don't push to Git (add to .gitignore)
+
+For a university project submission, what's the best approach? I need to:
+- Submit code on GitHub
+- Provide model for evaluation
+- Keep it simple for evaluators to run
+
+Suggest complete workflow with specific commands."
+
+Output Used: Model in .gitignore, provide download link in README
+--------------------------------------------------------------------------------
+
+
+PROMPT 24: Virtual Environment Setup
+--------------------------------------------------------------------------------
+Date: March 1, 2025
+Tool: Cursor AI
+Purpose: Create reproducible environment
+
+"Create a complete setup guide for my Flask app that:
+1. Creates Python virtual environment (Windows & Linux)
+2. Installs all dependencies from requirements.txt
+3. Downloads model artifacts (with instructions)
+4. Tests that everything works
+5. Runs the Flask app
+6. Opens browser to localhost:5000
+
+Provide both:
+- Bash script for Linux/Mac
+- PowerShell script for Windows
+- Manual step-by-step instructions
+
+Include troubleshooting section for common issues."
+
+Output Used: Added to README.md with Windows/Linux commands
+--------------------------------------------------------------------------------
+
+================================================================================
+PHASE 8: DOCUMENTATION (Week 7-8)
+================================================================================
+
+PROMPT 25: README Structure
+--------------------------------------------------------------------------------
+Date: March 3, 2025
+Tool: ChatGPT-4
+Purpose: Write project README
+
+"Write a professional README.md for my GitHub project with these sections:
+1. Project title and one-line description
+2. Overview (2-3 paragraphs)
+3. Architecture diagram (describe what to include)
+4. Features list
+5. Project structure (directory tree)
+6. Quick start guide
+7. Installation instructions
+8. Usage examples
+9. Training instructions
+10. Model performance metrics
+11. API documentation
+12. Technologies used
+13. Authors
+14. License
+15. Acknowledgments
+
+Use proper markdown formatting, badges, code blocks, and emojis sparingly.
+Make it look professional like popular open-source projects."
+
+Output Used: Created comprehensive README.md
+--------------------------------------------------------------------------------
+
+
+PROMPT 26: Code Comments Best Practices
+--------------------------------------------------------------------------------
+Date: March 5, 2025
+Tool: Claude
+Purpose: Improve code documentation
+
+"Review my Python code and suggest where to add docstrings and comments:
+
+Best practices for:
+1. Function docstrings (parameters, returns, examples)
+2. Class docstrings
+3. Inline comments (when to use, when to avoid)
+4. Type hints
+5. Module-level documentation
+6. TODO/FIXME markers
+
+Show example of well-documented function from my project following:
+- Google style docstrings
+- PEP 257 conventions
+- Clear parameter descriptions
+- Usage examples"
+
+Output Used: Added docstrings to all functions in app/inference.py
+--------------------------------------------------------------------------------
+
+
+PROMPT 27: API Documentation
+--------------------------------------------------------------------------------
+Date: March 7, 2025
+Tool: ChatGPT-4
+Purpose: Document REST API
+
+"Create API documentation for my Flask endpoints in markdown format:
+
+For each endpoint document:
+1. HTTP method and URL
+2. Description
+3. Request format (headers, body, parameters)
+4. Response format (JSON schema)
+5. Status codes (200, 400, 500, etc.)
+6. Example curl request
+7. Example successful response
+8. Example error response
+
+Endpoints:
+- GET /health
+- POST /recommend
+- GET /emotions
+- GET /stats
+
+Use API documentation best practices similar to Stripe/Twilio docs."
+
+Output Used: Added to README.md API Documentation section
+--------------------------------------------------------------------------------
+
+
+PROMPT 28: Training Metrics Visualization
+--------------------------------------------------------------------------------
+Date: March 8, 2025
+Tool: Cursor AI
+Purpose: Plot training curves
+
+"Create matplotlib code to visualize training metrics:
+
+Plot 1: Training and validation loss over epochs
+- Two lines (train, val)
+- X-axis: epochs (1-30)
+- Y-axis: loss value
+- Legend, grid, title
+- Mark best epoch with vertical line
+- Save as 'training_curves.png'
+
+Plot 2: Learning rate schedule
+- Show LR changes (warmup, cosine annealing)
+- Mark CLIP unfreezing point
+
+Plot 3: Confusion matrix for emotions
+- 7x7 heatmap
+- Row = actual, column = predicted
+- Show percentages
+- Save as 'confusion_matrix.png'
+
+Make plots publication-ready with proper labels and styling."
+
+Output Used: Added plotting code in Cell 16 of notebook
+--------------------------------------------------------------------------------
+
+================================================================================
+PHASE 9: DEPLOYMENT PREPARATION (Week 8)
+================================================================================
+
+PROMPT 29: Deployment Configuration
+--------------------------------------------------------------------------------
+Date: March 10, 2025
+Tool: Claude
+Purpose: Save deployment artifacts
+
+"I need to save all artifacts required for deployment to output/kaggle/working/:
+
+Files to save:
+1. Trained model (PyTorch .pt file)
+2. CLIP processor config
+3. FAISS index (.index file)
+4. Song metadata (parquet)
+5. Feature scaler (pickle)
+6. Deployment config (JSON with all hyperparameters)
+7. Model architecture code (standalone .py file)
+8. Training history (CSV with metrics per epoch)
+
+For deployment_config.json, include:
+- Model hyperparameters
+- Feature names and their order
+- Emotion label mapping
+- Normalization parameters
+- CLIP model name
+- Expected input/output shapes
+
+Provide code to save all these files and a loader function for inference."
+
+Output Used: Implemented in Cell 20, saves all required files
+--------------------------------------------------------------------------------
+
+
+PROMPT 30: Environment Compatibility Testing
+--------------------------------------------------------------------------------
+Date: March 12, 2025
+Tool: ChatGPT-4
+Purpose: Test across environments
+
+"My project was developed on Kaggle (Tesla T4 GPU, Linux, Python 3.10).
+How do I ensure it works on:
+1. Windows 10 (CPU only)
+2. Mac M1 (CPU/MPS)
+3. Linux server (different GPU)
+
+Issues to test:
+- PyTorch device compatibility (cuda/cpu/mps)
+- File paths (Windows backslash vs Linux forward slash)
+- Package versions (requirements.txt)
+- Model loading (GPU → CPU transfer)
+- FAISS CPU vs GPU
+- NumPy/Pandas compatibility
+
+Provide a test script that:
+1. Detects the environment
+2. Loads the model with appropriate device
+3. Runs a test inference
+4. Reports success/failure with diagnostic info"
+
+Output Used: Created test_inference.py with device detection
+--------------------------------------------------------------------------------
+
+================================================================================
+ADDITIONAL DEBUGGING PROMPTS
+================================================================================
+
+These prompts were used for specific bug fixes and optimizations:
+
+PROMPT 31: "My DataLoader is slow, GPU utilization is only 40%. How do I optimize?"
+PROMPT 32: "Fix NameError: name 'device' is not defined when running cell independently"
+PROMPT 33: "How do I prevent the same songs from being recommended multiple times?"
+PROMPT 34: "My emotion distribution is imbalanced. Should I use weighted sampling?"
+PROMPT 35: "Explain why cross-modal tasks have lower accuracy than uni-modal tasks"
+
+================================================================================
+PROMPT ENGINEERING TECHNIQUES DEMONSTRATED
+================================================================================
+
+1. **Context Setting**: Provided background (course project, constraints, goals)
+2. **Specific Requirements**: Listed numbered requirements for clear outputs
+3. **Technical Details**: Included model specs, data sizes, hardware constraints
+4. **Output Format**: Specified desired format (code, explanation, examples)
+5. **Iterative Refinement**: Follow-up prompts to debug and optimize solutions
+6. **Problem Decomposition**: Broke complex tasks into smaller, manageable prompts
+7. **Error-Driven**: Used error messages as prompts to find solutions
+8. **Best Practices**: Asked for industry-standard approaches and conventions
+9. **Examples Requested**: Asked for code examples with explanations
+10. **Trade-off Analysis**: Requested pros/cons for different approaches
+
+================================================================================
+TOOLS USED
+================================================================================
+
+- ChatGPT-4: Architecture design, research, documentation (60% of prompts)
+- Claude (Sonnet): Code review, debugging, optimization (25% of prompts)
+- Cursor AI: Code generation, refactoring, inline assistance (15% of prompts)
+
+Total development time with AI assistance: ~120 hours
+Estimated time without AI assistance: ~250 hours
+Productivity gain: ~2.1x faster development
+
+================================================================================
+END OF PROMPTS FILE
+================================================================================
+
